@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text Saver</title>
     <style>
-        /* ... (CSS is the same) ... */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
@@ -78,6 +77,30 @@
             font-weight: bold;
         }
     </style>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-analytics.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBO79GQNU79Iu1Cz001vX63FVp-d-0VFXI",
+            authDomain: "textshare-1a502.firebaseapp.com",
+            projectId: "textshare-1a502",
+            storageBucket: "textshare-1a502.firebasestorage.app",
+            messagingSenderId: "919298162474",
+            appId: "1:919298162474:web:ef0ee80bcc290c3753e853",
+            measurementId: "G-130PGMYVBC"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        
+        // Expose Firestore to global scope for older script block to use
+        window.db = getFirestore(app);
+    </script>
 </head>
 <body>
     <div class="container">
@@ -95,21 +118,9 @@
         </div>
     </div>
     
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    
     <script>
-        // ... (JavaScript is the same, no auth required on client side) ...
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // Use the Firestore instance from the module script
+        const db = window.db;
 
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -128,6 +139,7 @@
             textContainer.textContent = 'Loading...';
             
             try {
+                // Use the db instance from the module script
                 const docRef = db.collection('texts').doc(id);
                 const doc = await docRef.get();
                 
@@ -154,7 +166,8 @@
                 return;
             }
 
-            const functionsUrl = 'YOUR_CLOUD_FUNCTIONS_URL';
+            // You must replace this URL with the actual URL of your deployed Cloud Function.
+            const functionsUrl = 'https://us-central1-textshare-1a502.cloudfunctions.net/saveText';
 
             try {
                 const response = await fetch(functionsUrl, {

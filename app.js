@@ -23,7 +23,10 @@ const titleInput = document.getElementById('title-input');
 const textInput = document.getElementById('text-input');
 const submitBtn = document.getElementById('submit-btn');
 const titleOutput = document.getElementById('title-output');
+const timestampOutput = document.getElementById('timestamp-output'); // New timestamp element
 const textOutput = document.getElementById('text-output');
+const shareBtn = document.getElementById('share-btn'); // New share button
+const homeBtn = document.getElementById('home-btn'); // New go home button
 
 // Check the URL for an ID parameter
 const urlParams = new URLSearchParams(window.location.search);
@@ -38,15 +41,44 @@ const showForm = () => {
     if (textInput) textInput.classList.add('shimmer');
 };
 
+// Function to calculate time ago
+const timeAgo = (date) => {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
+
+    if (interval > 1) {
+        return Math.floor(interval) + " years ago";
+    }
+    interval = seconds / 2592000;
+    if (interval > 1) {
+        return Math.floor(interval) + " months ago";
+    }
+    interval = seconds / 86400;
+    if (interval > 1) {
+        return Math.floor(interval) + " days ago";
+    }
+    interval = seconds / 3600;
+    if (interval > 1) {
+        return Math.floor(interval) + " hours ago";
+    }
+    interval = seconds / 60;
+    if (interval > 1) {
+        return Math.floor(interval) + " minutes ago";
+    }
+    return Math.floor(seconds) + " seconds ago";
+};
+
 // Function to handle showing the text display
 const showText = async (id) => {
     formSection.classList.remove('active');
     displaySection.classList.add('active');
     
-    // Set both outputs to shimmer initially
+    // Set both outputs and timestamp to shimmer initially
     titleOutput.classList.add('shimmer');
     textOutput.classList.add('shimmer');
+    timestampOutput.classList.add('shimmer');
     titleOutput.textContent = '';
+    timestampOutput.textContent = '';
     textOutput.textContent = '';
     
     // Hide title initially
@@ -56,20 +88,26 @@ const showText = async (id) => {
         const docRef = doc(db, "texts", id);
         const docSnap = await getDoc(docRef);
 
-        // Remove shimmer from both outputs
+        // Remove shimmer from all outputs
         titleOutput.classList.remove('shimmer');
         textOutput.classList.remove('shimmer');
+        timestampOutput.classList.remove('shimmer');
 
         if (docSnap.exists()) {
-            const { title, content } = docSnap.data();
+            const data = docSnap.data();
+            const { title, content, createdAt } = data;
             
             // Check if title exists and display it
             if (title && title.trim() !== "") {
                 titleOutput.textContent = title;
-                titleOutput.classList.remove('hidden'); // Show title if it exists
+                titleOutput.classList.remove('hidden');
             } else {
-                titleOutput.classList.add('hidden'); // Hide title if it does not exist
+                titleOutput.classList.add('hidden');
             }
+
+            // Display timestamp
+            const date = createdAt.toDate();
+            timestampOutput.textContent = `Posted ${timeAgo(date)}`;
             
             textOutput.textContent = content;
         } else {
@@ -109,7 +147,7 @@ submitBtn.addEventListener('click', async () => {
     try {
         // Add a new document with both title and content
         const docRef = await addDoc(collection(db, "texts"), {
-            title: title, // Save the title as it is, even if empty
+            title: title,
             content: text,
             createdAt: new Date()
         });
@@ -124,6 +162,28 @@ submitBtn.addEventListener('click', async () => {
         console.error("Error adding document: ", e);
         alert("An error occurred. Please try again.");
     }
+});
+
+// Event listener for the Share button
+shareBtn.addEventListener('click', () => {
+    if (navigator.share) {
+        navigator.share({
+            title: document.title,
+            text: document.title,
+            url: window.location.href
+        }).then(() => {
+            console.log('Successfully shared');
+        }).catch(error => {
+            console.error('Error sharing:', error);
+        });
+    } else {
+        alert("Web Share API is not supported in your browser.");
+    }
+});
+
+// Event listener for the Go Home button
+homeBtn.addEventListener('click', () => {
+    window.location.href = `https://githubuser102234.github.io/TextShare/`;
 });
 
 // A separate function to check for Firebase connection and remove shimmer

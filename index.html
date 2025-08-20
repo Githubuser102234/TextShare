@@ -3,193 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Saver</title>
+    <title>TextShare</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f4f4f9;
+            color: #333;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            transition: background-color 0.5s ease;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .container {
-            background-color: white;
-            padding: 2em;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            text-align: center;
-            width: 90%;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
             max-width: 600px;
-            transition: all 0.5s ease;
+            text-align: center;
         }
         h1 {
-            color: #333;
-            margin-bottom: 1em;
+            color: #5c6ac4;
+            margin-bottom: 20px;
+        }
+        #form-section, #display-section {
+            display: none; /* Initially hide both sections */
+        }
+        #form-section.active, #display-section.active {
+            display: block; /* Show the active section */
         }
         textarea {
             width: 100%;
-            padding: 1em;
-            margin: 1em 0;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
             resize: vertical;
             min-height: 150px;
-            font-size: 1em;
+            box-sizing: border-box;
         }
         button {
-            background-color: #007bff;
-            color: white;
-            padding: 1em 2em;
+            background-color: #5c6ac4;
+            color: #fff;
             border: none;
-            border-radius: 4px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 18px;
             cursor: pointer;
-            font-size: 1em;
+            margin-top: 20px;
             transition: background-color 0.3s ease;
         }
         button:hover {
-            background-color: #0056b3;
-        }
-        #message {
-            margin-top: 1.5em;
-            font-weight: bold;
-        }
-        #input-section, #display-section {
-            display: none; /* Initially hide both sections */
+            background-color: #4956a1;
         }
         .text-display {
-            background-color: #e9ecef;
-            padding: 1.5em;
-            border-radius: 4px;
-            text-align: left;
             white-space: pre-wrap;
-            word-wrap: break-word;
-            font-size: 1.2em;
-            line-height: 1.6;
-            margin-top: 1.5em;
-            color: #555;
-            min-height: 100px;
+            text-align: left;
+            padding: 20px;
+            background-color: #eef2f8;
+            border-radius: 8px;
+            border: 1px solid #d3d9e8;
+            overflow-x: auto;
+            max-height: 50vh;
         }
-        .error {
-            color: red;
-            font-weight: bold;
+        .loading-message {
+            font-style: italic;
+            color: #888;
         }
     </style>
-    
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-analytics.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBO79GQNU79Iu1Cz001vX63FVp-d-0VFXI",
-            authDomain: "textshare-1a502.firebaseapp.com",
-            projectId: "textshare-1a502",
-            storageBucket: "textshare-1a502.firebasestorage.app",
-            messagingSenderId: "919298162474",
-            appId: "1:919298162474:web:ef0ee80bcc290c3753e853",
-            measurementId: "G-130PGMYVBC"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        
-        // Expose Firestore to global scope for older script block to use
-        window.db = getFirestore(app);
-    </script>
 </head>
 <body>
     <div class="container">
-        <div id="input-section">
-            <h1>Save Your Text</h1>
-            <textarea id="inputText" placeholder="Enter your text here..."></textarea>
-            <button id="saveButton">Save Text</button>
-            <div id="message"></div>
+        <h1>TextShare</h1>
+        
+        <div id="form-section" class="active">
+            <textarea id="text-input" placeholder="Type or paste your text here..."></textarea>
+            <button id="submit-btn">Generate Link</button>
         </div>
         
         <div id="display-section">
-            <h1>Your Saved Text</h1>
-            <div id="text-container" class="text-display"></div>
-            <p><a href="/">Create another text</a></p>
+            <div id="text-output" class="text-display"></div>
         </div>
+
+        <script src="app.js"></script>
     </div>
-    
-    <script>
-        // Use the Firestore instance from the module script
-        const db = window.db;
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('id');
-
-            if (id) {
-                document.getElementById('display-section').style.display = 'block';
-                await fetchAndDisplayText(id);
-            } else {
-                document.getElementById('input-section').style.display = 'block';
-            }
-        });
-
-        async function fetchAndDisplayText(id) {
-            const textContainer = document.getElementById('text-container');
-            textContainer.textContent = 'Loading...';
-            
-            try {
-                // Use the db instance from the module script
-                const docRef = db.collection('texts').doc(id);
-                const doc = await docRef.get();
-                
-                if (doc.exists) {
-                    textContainer.textContent = doc.data().text;
-                } else {
-                    textContainer.textContent = 'Document not found.';
-                    textContainer.classList.add('error');
-                }
-            } catch (error) {
-                console.error("Error getting document:", error);
-                textContainer.textContent = 'Error retrieving text.';
-                textContainer.classList.add('error');
-            }
-        }
-
-        document.getElementById('saveButton').addEventListener('click', async () => {
-            const text = document.getElementById('inputText').value;
-            const messageDiv = document.getElementById('message');
-
-            if (!text) {
-                messageDiv.textContent = 'Please enter some text.';
-                messageDiv.style.color = 'red';
-                return;
-            }
-
-            // You must replace this URL with the actual URL of your deployed Cloud Function.
-            const functionsUrl = 'https://us-central1-textshare-1a502.cloudfunctions.net/saveText';
-
-            try {
-                const response = await fetch(functionsUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text }),
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    const id = data.id;
-                    window.location.href = `/?id=${id}`;
-                } else {
-                    messageDiv.textContent = `Error: ${data.message || 'Could not save text.'}`;
-                    messageDiv.style.color = 'red';
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                messageDiv.textContent = 'An error occurred. Please try again.';
-                messageDiv.style.color = 'red';
-            }
-        });
-    </script>
 </body>
 </html>

@@ -11,7 +11,7 @@ const firebaseConfig = {
 
 // Import and initialize Firebase products
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -19,9 +19,13 @@ const db = getFirestore(app);
 // Get a reference to the main HTML elements
 const formSection = document.getElementById('form-section');
 const displaySection = document.getElementById('display-section');
+const tokenSection = document.getElementById('token-section'); // New token section
+const editSection = document.getElementById('edit-section'); // New edit section
+
 const titleInput = document.getElementById('title-input');
 const textInput = document.getElementById('text-input');
 const submitBtn = document.getElementById('submit-btn');
+
 const titleOutput = document.getElementById('title-output');
 const timestampOutput = document.getElementById('timestamp-output');
 const textOutput = document.getElementById('text-output');
@@ -29,7 +33,16 @@ const shareBtn = document.getElementById('share-btn');
 const copyBtn = document.getElementById('copy-btn');
 const homeBtn = document.getElementById('home-btn');
 
-// Check the URL for an ID parameter
+const keyIcon = document.getElementById('key-icon'); // New key icon
+const accessToken = document.getElementById('access-token');
+const tokenContinueBtn = document.getElementById('token-continue-btn');
+
+const titleEdit = document.getElementById('title-edit');
+const textEdit = document.getElementById('text-edit');
+const saveBtn = document.getElementById('save-btn');
+const deleteBtn = document.getElementById('delete-btn');
+
+// Check the URL for an ID parameter and a token parameter (for returning users)
 const urlParams = new URLSearchParams(window.location.search);
 const textId = urlParams.get('id');
 
@@ -37,6 +50,8 @@ const textId = urlParams.get('id');
 const showForm = () => {
     formSection.classList.add('active');
     displaySection.classList.remove('active');
+    editSection.classList.remove('active');
+    tokenSection.classList.remove('active');
     submitBtn.classList.add('shimmer');
     if (titleInput) titleInput.classList.add('shimmer');
     if (textInput) textInput.classList.add('shimmer');
@@ -46,26 +61,15 @@ const showForm = () => {
 const timeAgo = (date) => {
     const seconds = Math.floor((new Date() - date) / 1000);
     let interval = seconds / 31536000;
-
-    if (interval > 1) {
-        return Math.floor(interval) + " years ago";
-    }
+    if (interval > 1) return Math.floor(interval) + " years ago";
     interval = seconds / 2592000;
-    if (interval > 1) {
-        return Math.floor(interval) + " months ago";
-    }
+    if (interval > 1) return Math.floor(interval) + " months ago";
     interval = seconds / 86400;
-    if (interval > 1) {
-        return Math.floor(interval) + " days ago";
-    }
+    if (interval > 1) return Math.floor(interval) + " days ago";
     interval = seconds / 3600;
-    if (interval > 1) {
-        return Math.floor(interval) + " hours ago";
-    }
+    if (interval > 1) return Math.floor(interval) + " hours ago";
     interval = seconds / 60;
-    if (interval > 1) {
-        return Math.floor(interval) + " minutes ago";
-    }
+    if (interval > 1) return Math.floor(interval) + " minutes ago";
     return Math.floor(seconds) + " seconds ago";
 };
 
@@ -77,7 +81,7 @@ const formatDate = (date) => {
     let hours = date.getHours();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
-    hours = hours ? hours : 12; // The hour '0' should be '12'
+    hours = hours ? hours : 12;
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const time = `${hours}:${minutes}${ampm}`;
     return `${mm}/${dd}/${yy} ${time}`;
@@ -86,8 +90,11 @@ const formatDate = (date) => {
 // Function to handle showing the text display
 const showText = async (id) => {
     formSection.classList.remove('active');
+    tokenSection.classList.remove('active');
+    editSection.classList.remove('active');
     displaySection.classList.add('active');
-    
+    keyIcon.classList.remove('hidden');
+
     // Set all outputs and buttons to shimmer initially
     titleOutput.classList.add('shimmer');
     textOutput.classList.add('shimmer');
@@ -95,13 +102,11 @@ const showText = async (id) => {
     shareBtn.classList.add('shimmer');
     copyBtn.classList.add('shimmer');
     homeBtn.classList.add('shimmer');
+    keyIcon.classList.add('shimmer');
 
-    // Add placeholder content to shimmer
     titleOutput.textContent = '';
     textOutput.textContent = '';
     timestampOutput.innerHTML = `<span class="timestamp-placeholder shimmer"></span>`;
-
-    // Hide title initially
     titleOutput.classList.add('hidden');
 
     try {
@@ -119,75 +124,153 @@ const showText = async (id) => {
             shareBtn.classList.remove('shimmer');
             copyBtn.classList.remove('shimmer');
             homeBtn.classList.remove('shimmer');
+            keyIcon.classList.remove('shimmer');
             
-            // Check if title exists and display it
             if (title && title.trim() !== "") {
                 titleOutput.textContent = title;
                 titleOutput.classList.remove('hidden');
             } else {
                 titleOutput.classList.add('hidden');
             }
-
-            // Display formatted timestamp and time ago
             const date = createdAt.toDate();
             timestampOutput.textContent = `${formatDate(date)} • ${timeAgo(date)}`;
-            
             textOutput.textContent = content;
         } else {
-            // Invalid link case: show "not found" message
             titleOutput.classList.add('hidden');
             textOutput.textContent = "Oops! Text not found.";
-            // The buttons will continue to shimmer, indicating an error state
         }
     } catch (error) {
-        // Error case: show error message
         titleOutput.classList.add('hidden');
         textOutput.textContent = "Error loading text. Please try again later.";
         console.error("Error getting document:", error);
-        // The buttons will continue to shimmer, indicating an error state
     }
+};
+
+const switchToEditMode = (data) => {
+    displaySection.classList.remove('active');
+    editSection.classList.add('active');
+    keyIcon.classList.add('hidden');
+
+    titleEdit.value = data.title || '';
+    textEdit.value = data.content || '';
 };
 
 // If a textId exists in the URL, fetch and display the text
 if (textId) {
     showText(textId);
 } else {
-    // Otherwise, show the text creation form
     showForm();
 }
+
+// Function to generate a random token
+const generateToken = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 20; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+};
 
 // Event listener for the form submission
 submitBtn.addEventListener('click', async () => {
     const title = titleInput.value.trim();
     const text = textInput.value.trim();
+    const token = generateToken();
 
     if (text === "") {
         alert("Please enter some text!");
         return;
     }
     
-    // Add shimmer to the inputs and button when it's clicked
     submitBtn.classList.add('shimmer');
     titleInput.classList.add('shimmer');
     textInput.classList.add('shimmer');
 
     try {
-        // Add a new document with both title and content
         const docRef = await addDoc(collection(db, "texts"), {
             title: title,
             content: text,
+            token: token,
             createdAt: new Date()
         });
         
-        // Remove shimmer before redirecting
         submitBtn.classList.remove('shimmer');
-        
-        // Redirect to the new URL with the document ID
-        window.location.href = `https://githubuser102234.github.io/TextShare/?id=${docRef.id}`;
+        formSection.classList.remove('active');
+        tokenSection.classList.add('active');
+        accessToken.textContent = token;
+
+        tokenContinueBtn.addEventListener('click', () => {
+            window.location.href = `https://githubuser102234.github.io/TextShare/?id=${docRef.id}`;
+        });
 
     } catch (e) {
         console.error("Error adding document: ", e);
         alert("An error occurred. Please try again.");
+    }
+});
+
+// Event listener for the Key Icon
+keyIcon.addEventListener('click', async () => {
+    const userToken = prompt("Enter your permanent access token to edit this note:");
+    if (!userToken) return;
+
+    try {
+        const docRef = doc(db, "texts", textId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.token === userToken) {
+                switchToEditMode(data);
+            } else {
+                alert("Invalid token. You do not have permission to edit this note.");
+            }
+        } else {
+            alert("Note not found.");
+        }
+    } catch (error) {
+        alert("An error occurred while validating the token.");
+        console.error("Error validating token:", error);
+    }
+});
+
+// Event listener for the Save button
+saveBtn.addEventListener('click', async () => {
+    const newTitle = titleEdit.value.trim();
+    const newText = textEdit.value.trim();
+
+    if (newText === "") {
+        alert("Please enter some text!");
+        return;
+    }
+
+    try {
+        const docRef = doc(db, "texts", textId);
+        await updateDoc(docRef, {
+            title: newTitle,
+            content: newText
+        });
+        alert("Note saved successfully!");
+        window.location.reload();
+    } catch (error) {
+        console.error("Error updating document:", error);
+        alert("An error occurred while saving the note.");
+    }
+});
+
+// Event listener for the Delete button
+deleteBtn.addEventListener('click', async () => {
+    if (confirm("Are you sure you want to delete this note? This action cannot be undone.")) {
+        try {
+            const docRef = doc(db, "texts", textId);
+            await deleteDoc(docRef);
+            alert("Note deleted successfully!");
+            window.location.href = `https://githubuser102234.github.io/TextShare/`; // Go home after deleting
+        } catch (error) {
+            console.error("Error deleting document:", error);
+            alert("An error occurred while deleting the note.");
+        }
     }
 });
 
@@ -231,7 +314,7 @@ const checkFirebaseConnection = () => {
             if (titleInput) titleInput.classList.remove('shimmer');
             if (textInput) textInput.classList.remove('shimmer');
         }
-    }, 1000); // 1-second delay to show the effect
+    }, 1000);
 };
 
 // Hide the Share button if not supported

@@ -68,6 +68,20 @@ const timeAgo = (date) => {
     return Math.floor(seconds) + " seconds ago";
 };
 
+// Function to format the full date
+const formatDate = (date) => {
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const yy = String(date.getFullYear()).slice(2);
+    let hours = date.getHours();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // The hour '0' should be '12'
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const time = `${hours}:${minutes}${ampm}`;
+    return `${mm}/${dd}/${yy} ${time}`;
+};
+
 // Function to handle showing the text display
 const showText = async (id) => {
     formSection.classList.remove('active');
@@ -77,10 +91,12 @@ const showText = async (id) => {
     titleOutput.classList.add('shimmer');
     textOutput.classList.add('shimmer');
     timestampOutput.classList.add('shimmer');
+
+    // Add placeholder content to shimmer
     titleOutput.textContent = '';
-    timestampOutput.textContent = '';
     textOutput.textContent = '';
-    
+    timestampOutput.innerHTML = `<span class="timestamp-placeholder shimmer"></span>`;
+
     // Hide title initially
     titleOutput.classList.add('hidden');
 
@@ -105,9 +121,9 @@ const showText = async (id) => {
                 titleOutput.classList.add('hidden');
             }
 
-            // Display timestamp
+            // Display formatted timestamp and time ago
             const date = createdAt.toDate();
-            timestampOutput.textContent = `Posted ${timeAgo(date)}`;
+            timestampOutput.textContent = `${formatDate(date)} • ${timeAgo(date)}`;
             
             textOutput.textContent = content;
         } else {

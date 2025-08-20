@@ -46,6 +46,16 @@
             resize: vertical;
             min-height: 150px;
             box-sizing: border-box;
+            margin-bottom: 15px; /* Added spacing */
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            margin-bottom: 15px; /* Added spacing */
         }
         button {
             background-color: #5c6ac4;
@@ -83,6 +93,9 @@
             background-size: 800px 100%;
             animation: shimmer 1s linear infinite;
         }
+        .shimmer::placeholder {
+            color: transparent; /* Hides placeholder text during shimmer */
+        }
         @keyframes shimmer {
             0% {
                 background-position: -468px 0;
@@ -98,11 +111,13 @@
         <h1>TextShare</h1>
         
         <div id="form-section" class="active">
+            <input type="text" id="title-input" placeholder="Add a title (optional)">
             <textarea id="text-input" placeholder="Type or paste your text here..."></textarea>
             <button id="submit-btn">Generate Link</button>
         </div>
         
         <div id="display-section">
+            <h2 id="title-output" class="text-display"></h2>
             <div id="text-output" class="text-display"></div>
         </div>
 

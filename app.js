@@ -23,10 +23,10 @@ const titleInput = document.getElementById('title-input');
 const textInput = document.getElementById('text-input');
 const submitBtn = document.getElementById('submit-btn');
 const titleOutput = document.getElementById('title-output');
-const timestampOutput = document.getElementById('timestamp-output'); // New timestamp element
+const timestampOutput = document.getElementById('timestamp-output');
 const textOutput = document.getElementById('text-output');
-const shareBtn = document.getElementById('share-btn'); // New share button
-const homeBtn = document.getElementById('home-btn'); // New go home button
+const shareBtn = document.getElementById('share-btn');
+const homeBtn = document.getElementById('home-btn');
 
 // Check the URL for an ID parameter
 const urlParams = new URLSearchParams(window.location.search);

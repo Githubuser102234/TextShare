@@ -26,17 +26,17 @@
             width: 100%;
             max-width: 600px;
             text-align: center;
-            position: relative;
+            position: relative; /* Added for key icon positioning */
         }
         h1 {
             color: #2196F3;
             margin-bottom: 20px;
         }
-        #form-section, #display-section, #token-section, #edit-section, #password-prompt {
-            display: none;
+        #form-section, #display-section, #token-section, #edit-section {
+            display: none; /* Initially hide all sections */
         }
-        #form-section.active, #display-section.active, #token-section.active, #edit-section.active, #password-prompt.active {
-            display: block;
+        #form-section.active, #display-section.active, #token-section.active, #edit-section.active {
+            display: block; /* Show the active section */
         }
         textarea {
             width: 100%;
@@ -49,7 +49,7 @@
             box-sizing: border-box;
             margin-bottom: 15px;
         }
-        input[type="text"], input[type="password"] {
+        input[type="text"] {
             width: 100%;
             padding: 15px;
             border: 2px solid #ddd;
@@ -82,6 +82,7 @@
             overflow-x: auto;
             max-height: 50vh;
         }
+        /* New CSS for the timestamp */
         #timestamp-output {
             color: #888;
             font-size: 0.9em;
@@ -91,6 +92,7 @@
             font-style: italic;
             color: #888;
         }
+        /* New CSS for the shimmer effect */
         .shimmer {
             background: #f6f7f8;
             background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
@@ -114,6 +116,7 @@
         .hidden {
             display: none;
         }
+        /* Style for the timestamp shimmer placeholder */
         .timestamp-placeholder {
             display: inline-block;
             width: 150px;
@@ -145,7 +148,7 @@
             position: absolute;
             top: 15px;
             right: 15px;
-            font-size: 20px;
+            font-size: 20px; /* Reduced key icon size */
             cursor: pointer;
             color: #2196F3;
             transition: transform 0.2s ease;
@@ -159,19 +162,6 @@
         #delete-btn:hover {
             background-color: #d32f2f;
         }
-        /* New CSS for the password prompt modal */
-        #password-prompt {
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            background-color: #f8f9fa;
-        }
-        #password-input {
-            margin-bottom: 10px;
-        }
-        #password-prompt button {
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
@@ -182,7 +172,6 @@
         
         <div id="form-section" class="active">
             <input type="text" id="title-input" placeholder="Add a title (optional)">
-            <input type="password" id="password-input" placeholder="Set a password (optional)">
             <textarea id="text-input" placeholder="Type or paste your text here..."></textarea>
             <button id="submit-btn">Generate Link</button>
         </div>
@@ -207,16 +196,9 @@
 
         <div id="edit-section">
             <input type="text" id="title-edit" placeholder="Edit title">
-            <input type="password" id="password-edit" placeholder="Change password (optional)">
             <textarea id="text-edit" placeholder="Edit text here..."></textarea>
             <button id="save-btn">Save Changes</button>
             <button id="delete-btn">Delete Note</button>
-        </div>
-
-        <div id="password-prompt">
-            <h2>This note is password protected</h2>
-            <input type="password" id="password-prompt-input" placeholder="Enter password">
-            <button id="password-prompt-btn">View Note</button>
         </div>
 
         <script src="app.js" type="module"></script>

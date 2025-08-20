@@ -82,7 +82,7 @@ submitBtn.addEventListener('click', async () => {
         });
         
         // Redirect to the new URL with the document ID
-        window.location.href = `/?id=${docRef.id}`;
+        window.location.href = `https://githubuser102234.github.io/TextShare/?id=${docRef.id}`;
 
     } catch (e) {
         console.error("Error adding document: ", e);

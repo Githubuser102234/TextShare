@@ -19,10 +19,10 @@ const db = getFirestore(app);
 // Get a reference to the main HTML elements
 const formSection = document.getElementById('form-section');
 const displaySection = document.getElementById('display-section');
-const titleInput = document.getElementById('title-input'); // New title input
+const titleInput = document.getElementById('title-input');
 const textInput = document.getElementById('text-input');
 const submitBtn = document.getElementById('submit-btn');
-const titleOutput = document.getElementById('title-output'); // New title output
+const titleOutput = document.getElementById('title-output');
 const textOutput = document.getElementById('text-output');
 
 // Check the URL for an ID parameter
@@ -34,8 +34,8 @@ const showForm = () => {
     formSection.classList.add('active');
     displaySection.classList.remove('active');
     submitBtn.classList.add('shimmer');
-    if (titleInput) titleInput.classList.add('shimmer'); // Add shimmer to title input
-    if (textInput) textInput.classList.add('shimmer'); // Add shimmer to text input
+    if (titleInput) titleInput.classList.add('shimmer');
+    if (textInput) textInput.classList.add('shimmer');
 };
 
 // Function to handle showing the text display
@@ -43,30 +43,41 @@ const showText = async (id) => {
     formSection.classList.remove('active');
     displaySection.classList.add('active');
     
-    // Clear content and add shimmer to both title and text output
-    titleOutput.textContent = '';
-    textOutput.textContent = '';
+    // Set both outputs to shimmer initially
     titleOutput.classList.add('shimmer');
     textOutput.classList.add('shimmer');
+    titleOutput.textContent = '';
+    textOutput.textContent = '';
+    
+    // Hide title initially
+    titleOutput.classList.add('hidden');
 
     try {
         const docRef = doc(db, "texts", id);
         const docSnap = await getDoc(docRef);
 
-        // Remove shimmer from both outputs once content is loaded
+        // Remove shimmer from both outputs
         titleOutput.classList.remove('shimmer');
         textOutput.classList.remove('shimmer');
 
         if (docSnap.exists()) {
-            const { title, content } = docSnap.data(); // Get title and content
-            titleOutput.textContent = title || "Untitled"; // Display title or "Untitled" if none exists
+            const { title, content } = docSnap.data();
+            
+            // Check if title exists and display it
+            if (title && title.trim() !== "") {
+                titleOutput.textContent = title;
+                titleOutput.classList.remove('hidden'); // Show title if it exists
+            } else {
+                titleOutput.classList.add('hidden'); // Hide title if it does not exist
+            }
+            
             textOutput.textContent = content;
         } else {
-            titleOutput.textContent = "Error";
+            titleOutput.classList.add('hidden');
             textOutput.textContent = "Oops! Text not found.";
         }
     } catch (error) {
-        titleOutput.textContent = "Error";
+        titleOutput.classList.add('hidden');
         textOutput.textContent = "Error loading text. Please try again later.";
         console.error("Error getting document:", error);
     }
@@ -82,7 +93,7 @@ if (textId) {
 
 // Event listener for the form submission
 submitBtn.addEventListener('click', async () => {
-    const title = titleInput.value.trim(); // Get the title value
+    const title = titleInput.value.trim();
     const text = textInput.value.trim();
 
     if (text === "") {
@@ -98,7 +109,7 @@ submitBtn.addEventListener('click', async () => {
     try {
         // Add a new document with both title and content
         const docRef = await addDoc(collection(db, "texts"), {
-            title: title || "Untitled", // Save the title or "Untitled" if empty
+            title: title, // Save the title as it is, even if empty
             content: text,
             createdAt: new Date()
         });
@@ -120,8 +131,8 @@ const checkFirebaseConnection = () => {
     setTimeout(() => {
         if (formSection.classList.contains('active')) {
             submitBtn.classList.remove('shimmer');
-            if (titleInput) titleInput.classList.remove('shimmer'); // Remove shimmer from title input
-            if (textInput) textInput.classList.remove('shimmer'); // Remove shimmer from text input
+            if (titleInput) titleInput.classList.remove('shimmer');
+            if (textInput) textInput.classList.remove('shimmer');
         }
     }, 1000); // 1-second delay to show the effect
 };

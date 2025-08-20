@@ -26,15 +26,16 @@
             width: 100%;
             max-width: 600px;
             text-align: center;
+            position: relative; /* Added for key icon positioning */
         }
         h1 {
-            color: #2196F3; /* Changed to Blue */
+            color: #2196F3;
             margin-bottom: 20px;
         }
-        #form-section, #display-section {
-            display: none; /* Initially hide both sections */
+        #form-section, #display-section, #token-section, #edit-section {
+            display: none; /* Initially hide all sections */
         }
-        #form-section.active, #display-section.active {
+        #form-section.active, #display-section.active, #token-section.active, #edit-section.active {
             display: block; /* Show the active section */
         }
         textarea {
@@ -46,7 +47,7 @@
             resize: vertical;
             min-height: 150px;
             box-sizing: border-box;
-            margin-bottom: 15px; /* Added spacing */
+            margin-bottom: 15px;
         }
         input[type="text"] {
             width: 100%;
@@ -55,10 +56,10 @@
             border-radius: 8px;
             font-size: 16px;
             box-sizing: border-box;
-            margin-bottom: 15px; /* Added spacing */
+            margin-bottom: 15px;
         }
         button {
-            background-color: #2196F3; /* Changed to Blue */
+            background-color: #2196F3;
             color: #fff;
             border: none;
             padding: 12px 24px;
@@ -69,7 +70,7 @@
             transition: background-color 0.3s ease;
         }
         button:hover {
-            background-color: #1976D2; /* Changed to a darker blue */
+            background-color: #1976D2;
         }
         .text-display {
             white-space: pre-wrap;
@@ -99,10 +100,10 @@
             background-size: 800px 100%;
             animation: shimmer 1s linear infinite;
             cursor: progress;
-            pointer-events: none; /* Disables all pointer events */
+            pointer-events: none;
         }
         .shimmer::placeholder {
-            color: transparent; /* Hides placeholder text during shimmer */
+            color: transparent;
         }
         @keyframes shimmer {
             0% {
@@ -118,22 +119,70 @@
         /* Style for the timestamp shimmer placeholder */
         .timestamp-placeholder {
             display: inline-block;
-            width: 150px; /* Adjust as needed */
+            width: 150px;
             height: 1em;
             vertical-align: middle;
             background: #e0e0e0;
             border-radius: 4px;
+        }
+        .token-display {
+            background-color: #fff3cd;
+            border: 1px solid #ffecb5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .token-display h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .token-display p {
+            word-break: break-all;
+            font-family: monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .key-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #2196F3;
+            transition: transform 0.2s ease;
+        }
+        .key-icon:hover {
+            transform: scale(1.1);
+        }
+        #delete-btn {
+            background-color: #f44336;
+        }
+        #delete-btn:hover {
+            background-color: #d32f2f;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>TextShare</h1>
+
+        <button id="key-icon" class="key-icon hidden">🔑</button>
         
         <div id="form-section" class="active">
             <input type="text" id="title-input" placeholder="Add a title (optional)">
             <textarea id="text-input" placeholder="Type or paste your text here..."></textarea>
             <button id="submit-btn">Generate Link</button>
+        </div>
+
+        <div id="token-section">
+            <div class="token-display">
+                <h3>Your Permanent Access Token</h3>
+                <p>Please copy this token and save it somewhere safe. You will need it to edit or delete your note. It will not be shown again.</p>
+                <p id="access-token"></p>
+                <button id="token-continue-btn">I've Saved It, Continue</button>
+            </div>
         </div>
         
         <div id="display-section">
@@ -143,6 +192,13 @@
             <button id="share-btn">Share Link</button>
             <button id="copy-btn">Copy Link</button>
             <button id="home-btn">Go Home</button>
+        </div>
+
+        <div id="edit-section">
+            <input type="text" id="title-edit" placeholder="Edit title">
+            <textarea id="text-edit" placeholder="Edit text here..."></textarea>
+            <button id="save-btn">Save Changes</button>
+            <button id="delete-btn">Delete Note</button>
         </div>
 
         <script src="app.js" type="module"></script>

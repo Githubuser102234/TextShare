@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Saver</title>
+    <style>
+        /* ... (CSS is the same) ... */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.5s ease;
+        }
+        .container {
+            background-color: white;
+            padding: 2em;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+            transition: all 0.5s ease;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1em;
+        }
+        textarea {
+            width: 100%;
+            padding: 1em;
+            margin: 1em 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            resize: vertical;
+            min-height: 150px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 1em 2em;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #message {
+            margin-top: 1.5em;
+            font-weight: bold;
+        }
+        #input-section, #display-section {
+            display: none; /* Initially hide both sections */
+        }
+        .text-display {
+            background-color: #e9ecef;
+            padding: 1.5em;
+            border-radius: 4px;
+            text-align: left;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-top: 1.5em;
+            color: #555;
+            min-height: 100px;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="input-section">
+            <h1>Save Your Text</h1>
+            <textarea id="inputText" placeholder="Enter your text here..."></textarea>
+            <button id="saveButton">Save Text</button>
+            <div id="message"></div>
+        </div>
+        
+        <div id="display-section">
+            <h1>Your Saved Text</h1>
+            <div id="text-container" class="text-display"></div>
+            <p><a href="/">Create another text</a></p>
+        </div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
+    <script>
+        // ... (JavaScript is the same, no auth required on client side) ...
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+
+            if (id) {
+                document.getElementById('display-section').style.display = 'block';
+                await fetchAndDisplayText(id);
+            } else {
+                document.getElementById('input-section').style.display = 'block';
+            }
+        });
+
+        async function fetchAndDisplayText(id) {
+            const textContainer = document.getElementById('text-container');
+            textContainer.textContent = 'Loading...';
+            
+            try {
+                const docRef = db.collection('texts').doc(id);
+                const doc = await docRef.get();
+                
+                if (doc.exists) {
+                    textContainer.textContent = doc.data().text;
+                } else {
+                    textContainer.textContent = 'Document not found.';
+                    textContainer.classList.add('error');
+                }
+            } catch (error) {
+                console.error("Error getting document:", error);
+                textContainer.textContent = 'Error retrieving text.';
+                textContainer.classList.add('error');
+            }
+        }
+
+        document.getElementById('saveButton').addEventListener('click', async () => {
+            const text = document.getElementById('inputText').value;
+            const messageDiv = document.getElementById('message');
+
+            if (!text) {
+                messageDiv.textContent = 'Please enter some text.';
+                messageDiv.style.color = 'red';
+                return;
+            }
+
+            const functionsUrl = 'YOUR_CLOUD_FUNCTIONS_URL';
+
+            try {
+                const response = await fetch(functionsUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text }),
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    const id = data.id;
+                    window.location.href = `/?id=${id}`;
+                } else {
+                    messageDiv.textContent = `Error: ${data.message || 'Could not save text.'}`;
+                    messageDiv.style.color = 'red';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                messageDiv.textContent = 'An error occurred. Please try again.';
+                messageDiv.style.color = 'red';
+            }
+        });
+    </script>
+</body>
+</html>

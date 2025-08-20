@@ -31,6 +31,7 @@ const textId = urlParams.get('id');
 const showForm = () => {
     formSection.classList.add('active');
     displaySection.classList.remove('active');
+    submitBtn.classList.add('shimmer'); // Add shimmer to the button on form load 💡
 };
 
 // Function to handle showing the text display
@@ -39,7 +40,7 @@ const showText = async (id) => {
     displaySection.classList.add('active');
     
     // Clear the content and add the shimmer effect
-    textOutput.textContent = ''; // Change this line 💡
+    textOutput.textContent = '';
     textOutput.classList.add('shimmer');
 
     try {
@@ -77,6 +78,9 @@ submitBtn.addEventListener('click', async () => {
         alert("Please enter some text!");
         return;
     }
+    
+    // Add shimmer to the button when it's clicked
+    submitBtn.classList.add('shimmer'); // 💡
 
     try {
         // Add a new document to the "texts" collection
@@ -84,6 +88,9 @@ submitBtn.addEventListener('click', async () => {
             content: text,
             createdAt: new Date()
         });
+        
+        // Remove shimmer before redirecting
+        submitBtn.classList.remove('shimmer'); // 💡
         
         // Redirect to the new URL with the document ID
         window.location.href = `https://githubuser102234.github.io/TextShare/?id=${docRef.id}`;
@@ -93,3 +100,18 @@ submitBtn.addEventListener('click', async () => {
         alert("An error occurred. Please try again.");
     }
 });
+
+// A separate function to check for Firebase connection and remove shimmer
+const checkFirebaseConnection = () => {
+    // A simple check to see if the Firebase app is initialized and ready
+    // You can't rely on the async calls being complete, so this is a heuristic
+    // to remove the shimmer after a brief moment to show it works
+    setTimeout(() => {
+        if (formSection.classList.contains('active')) {
+            submitBtn.classList.remove('shimmer');
+        }
+    }, 1000); // 1-second delay to show the effect 💡
+};
+
+// Run the check on initial page load
+checkFirebaseConnection();

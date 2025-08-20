@@ -19,8 +19,10 @@ const db = getFirestore(app);
 // Get a reference to the main HTML elements
 const formSection = document.getElementById('form-section');
 const displaySection = document.getElementById('display-section');
+const titleInput = document.getElementById('title-input'); // New title input
 const textInput = document.getElementById('text-input');
 const submitBtn = document.getElementById('submit-btn');
+const titleOutput = document.getElementById('title-output'); // New title output
 const textOutput = document.getElementById('text-output');
 
 // Check the URL for an ID parameter
@@ -31,7 +33,9 @@ const textId = urlParams.get('id');
 const showForm = () => {
     formSection.classList.add('active');
     displaySection.classList.remove('active');
-    submitBtn.classList.add('shimmer'); // Add shimmer to the button on form load 💡
+    submitBtn.classList.add('shimmer');
+    if (titleInput) titleInput.classList.add('shimmer'); // Add shimmer to title input
+    if (textInput) textInput.classList.add('shimmer'); // Add shimmer to text input
 };
 
 // Function to handle showing the text display
@@ -39,24 +43,30 @@ const showText = async (id) => {
     formSection.classList.remove('active');
     displaySection.classList.add('active');
     
-    // Clear the content and add the shimmer effect
+    // Clear content and add shimmer to both title and text output
+    titleOutput.textContent = '';
     textOutput.textContent = '';
+    titleOutput.classList.add('shimmer');
     textOutput.classList.add('shimmer');
 
     try {
         const docRef = doc(db, "texts", id);
         const docSnap = await getDoc(docRef);
 
-        // Remove the shimmer effect once content is loaded
+        // Remove shimmer from both outputs once content is loaded
+        titleOutput.classList.remove('shimmer');
         textOutput.classList.remove('shimmer');
 
         if (docSnap.exists()) {
-            const textContent = docSnap.data().content;
-            textOutput.textContent = textContent;
+            const { title, content } = docSnap.data(); // Get title and content
+            titleOutput.textContent = title || "Untitled"; // Display title or "Untitled" if none exists
+            textOutput.textContent = content;
         } else {
+            titleOutput.textContent = "Error";
             textOutput.textContent = "Oops! Text not found.";
         }
     } catch (error) {
+        titleOutput.textContent = "Error";
         textOutput.textContent = "Error loading text. Please try again later.";
         console.error("Error getting document:", error);
     }
@@ -72,6 +82,7 @@ if (textId) {
 
 // Event listener for the form submission
 submitBtn.addEventListener('click', async () => {
+    const title = titleInput.value.trim(); // Get the title value
     const text = textInput.value.trim();
 
     if (text === "") {
@@ -79,18 +90,21 @@ submitBtn.addEventListener('click', async () => {
         return;
     }
     
-    // Add shimmer to the button when it's clicked
-    submitBtn.classList.add('shimmer'); // 💡
+    // Add shimmer to the inputs and button when it's clicked
+    submitBtn.classList.add('shimmer');
+    titleInput.classList.add('shimmer');
+    textInput.classList.add('shimmer');
 
     try {
-        // Add a new document to the "texts" collection
+        // Add a new document with both title and content
         const docRef = await addDoc(collection(db, "texts"), {
+            title: title || "Untitled", // Save the title or "Untitled" if empty
             content: text,
             createdAt: new Date()
         });
         
         // Remove shimmer before redirecting
-        submitBtn.classList.remove('shimmer'); // 💡
+        submitBtn.classList.remove('shimmer');
         
         // Redirect to the new URL with the document ID
         window.location.href = `https://githubuser102234.github.io/TextShare/?id=${docRef.id}`;
@@ -103,14 +117,13 @@ submitBtn.addEventListener('click', async () => {
 
 // A separate function to check for Firebase connection and remove shimmer
 const checkFirebaseConnection = () => {
-    // A simple check to see if the Firebase app is initialized and ready
-    // You can't rely on the async calls being complete, so this is a heuristic
-    // to remove the shimmer after a brief moment to show it works
     setTimeout(() => {
         if (formSection.classList.contains('active')) {
             submitBtn.classList.remove('shimmer');
+            if (titleInput) titleInput.classList.remove('shimmer'); // Remove shimmer from title input
+            if (textInput) textInput.classList.remove('shimmer'); // Remove shimmer from text input
         }
-    }, 1000); // 1-second delay to show the effect 💡
+    }, 1000); // 1-second delay to show the effect
 };
 
 // Run the check on initial page load

@@ -19,10 +19,12 @@ const db = getFirestore(app);
 // Get a reference to the main HTML elements
 const formSection = document.getElementById('form-section');
 const displaySection = document.getElementById('display-section');
-const tokenSection = document.getElementById('token-section'); // New token section
-const editSection = document.getElementById('edit-section'); // New edit section
+const tokenSection = document.getElementById('token-section');
+const editSection = document.getElementById('edit-section');
+const passwordPromptSection = document.getElementById('password-prompt');
 
 const titleInput = document.getElementById('title-input');
+const passwordInput = document.getElementById('password-input');
 const textInput = document.getElementById('text-input');
 const submitBtn = document.getElementById('submit-btn');
 
@@ -33,16 +35,22 @@ const shareBtn = document.getElementById('share-btn');
 const copyBtn = document.getElementById('copy-btn');
 const homeBtn = document.getElementById('home-btn');
 
-const keyIcon = document.getElementById('key-icon'); // New key icon
+const keyIcon = document.getElementById('key-icon');
 const accessToken = document.getElementById('access-token');
 const tokenContinueBtn = document.getElementById('token-continue-btn');
 
 const titleEdit = document.getElementById('title-edit');
+const passwordEdit = document.getElementById('password-edit');
 const textEdit = document.getElementById('text-edit');
 const saveBtn = document.getElementById('save-btn');
 const deleteBtn = document.getElementById('delete-btn');
 
-// Check the URL for an ID parameter and a token parameter (for returning users)
+const passwordPromptInput = document.getElementById('password-prompt-input');
+const passwordPromptBtn = document.getElementById('password-prompt-btn');
+
+let currentNoteData = null; // To store note data for quick access
+
+// Check the URL for an ID parameter
 const urlParams = new URLSearchParams(window.location.search);
 const textId = urlParams.get('id');
 
@@ -52,9 +60,11 @@ const showForm = () => {
     displaySection.classList.remove('active');
     editSection.classList.remove('active');
     tokenSection.classList.remove('active');
+    passwordPromptSection.classList.remove('active');
     submitBtn.classList.add('shimmer');
     if (titleInput) titleInput.classList.add('shimmer');
     if (textInput) textInput.classList.add('shimmer');
+    if (passwordInput) passwordInput.classList.add('shimmer');
 };
 
 // Function to calculate time ago
@@ -88,14 +98,14 @@ const formatDate = (date) => {
 };
 
 // Function to handle showing the text display
-const showText = async (id) => {
+const showText = async (id, password = null) => {
     formSection.classList.remove('active');
     tokenSection.classList.remove('active');
     editSection.classList.remove('active');
+    passwordPromptSection.classList.remove('active');
     displaySection.classList.add('active');
     keyIcon.classList.remove('hidden');
 
-    // Set all outputs and buttons to shimmer initially
     titleOutput.classList.add('shimmer');
     textOutput.classList.add('shimmer');
     timestampOutput.classList.add('shimmer');
@@ -114,8 +124,13 @@ const showText = async (id) => {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            const data = docSnap.data();
-            const { title, content, createdAt } = data;
+            currentNoteData = docSnap.data();
+
+            // If there's a password, prompt for it
+            if (currentNoteData.password && currentNoteData.password !== password) {
+                showPasswordPrompt();
+                return;
+            }
 
             // Remove shimmer from all outputs
             titleOutput.classList.remove('shimmer');
@@ -125,6 +140,8 @@ const showText = async (id) => {
             copyBtn.classList.remove('shimmer');
             homeBtn.classList.remove('shimmer');
             keyIcon.classList.remove('shimmer');
+
+            const { title, content, createdAt } = currentNoteData;
             
             if (title && title.trim() !== "") {
                 titleOutput.textContent = title;
@@ -146,16 +163,23 @@ const showText = async (id) => {
     }
 };
 
+const showPasswordPrompt = () => {
+    displaySection.classList.remove('active');
+    passwordPromptSection.classList.add('active');
+};
+
 const switchToEditMode = (data) => {
     displaySection.classList.remove('active');
     editSection.classList.add('active');
     keyIcon.classList.add('hidden');
+    passwordPromptSection.classList.remove('active');
 
     titleEdit.value = data.title || '';
+    passwordEdit.value = data.password || '';
     textEdit.value = data.content || '';
 };
 
-// If a textId exists in the URL, fetch and display the text
+// Initial check
 if (textId) {
     showText(textId);
 } else {
@@ -175,6 +199,7 @@ const generateToken = () => {
 // Event listener for the form submission
 submitBtn.addEventListener('click', async () => {
     const title = titleInput.value.trim();
+    const password = passwordInput.value.trim();
     const text = textInput.value.trim();
     const token = generateToken();
 
@@ -185,11 +210,13 @@ submitBtn.addEventListener('click', async () => {
     
     submitBtn.classList.add('shimmer');
     titleInput.classList.add('shimmer');
+    passwordInput.classList.add('shimmer');
     textInput.classList.add('shimmer');
 
     try {
         const docRef = await addDoc(collection(db, "texts"), {
             title: title,
+            password: password,
             content: text,
             token: token,
             createdAt: new Date()
@@ -238,6 +265,7 @@ keyIcon.addEventListener('click', async () => {
 // Event listener for the Save button
 saveBtn.addEventListener('click', async () => {
     const newTitle = titleEdit.value.trim();
+    const newPassword = passwordEdit.value.trim();
     const newText = textEdit.value.trim();
 
     if (newText === "") {
@@ -249,6 +277,7 @@ saveBtn.addEventListener('click', async () => {
         const docRef = doc(db, "texts", textId);
         await updateDoc(docRef, {
             title: newTitle,
+            password: newPassword,
             content: newText
         });
         alert("Note saved successfully!");
@@ -266,11 +295,22 @@ deleteBtn.addEventListener('click', async () => {
             const docRef = doc(db, "texts", textId);
             await deleteDoc(docRef);
             alert("Note deleted successfully!");
-            window.location.href = `https://githubuser102234.github.io/TextShare/`; // Go home after deleting
+            window.location.href = `https://githubuser102234.github.io/TextShare/`;
         } catch (error) {
             console.error("Error deleting document:", error);
             alert("An error occurred while deleting the note.");
         }
+    }
+});
+
+// Event listener for the Password Prompt button
+passwordPromptBtn.addEventListener('click', () => {
+    const enteredPassword = passwordPromptInput.value.trim();
+    if (enteredPassword === currentNoteData.password) {
+        showText(textId, enteredPassword);
+    } else {
+        alert("Incorrect password.");
+        passwordPromptInput.value = '';
     }
 });
 

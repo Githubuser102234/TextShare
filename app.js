@@ -26,7 +26,7 @@ const titleOutput = document.getElementById('title-output');
 const timestampOutput = document.getElementById('timestamp-output');
 const textOutput = document.getElementById('text-output');
 const shareBtn = document.getElementById('share-btn');
-const copyBtn = document.getElementById('copy-btn'); // New copy button
+const copyBtn = document.getElementById('copy-btn');
 const homeBtn = document.getElementById('home-btn');
 
 // Check the URL for an ID parameter
@@ -88,7 +88,7 @@ const showText = async (id) => {
     formSection.classList.remove('active');
     displaySection.classList.add('active');
     
-    // Set both outputs and timestamp to shimmer initially
+    // Set all outputs and buttons to shimmer initially
     titleOutput.classList.add('shimmer');
     textOutput.classList.add('shimmer');
     timestampOutput.classList.add('shimmer');
@@ -134,15 +134,17 @@ const showText = async (id) => {
             
             textOutput.textContent = content;
         } else {
-            // Invalid link case: show "not found" message and shimmer buttons
+            // Invalid link case: show "not found" message
             titleOutput.classList.add('hidden');
             textOutput.textContent = "Oops! Text not found.";
+            // The buttons will continue to shimmer, indicating an error state
         }
     } catch (error) {
-        // Error case: show error message and shimmer buttons
+        // Error case: show error message
         titleOutput.classList.add('hidden');
         textOutput.textContent = "Error loading text. Please try again later.";
         console.error("Error getting document:", error);
+        // The buttons will continue to shimmer, indicating an error state
     }
 };
 
@@ -231,6 +233,11 @@ const checkFirebaseConnection = () => {
         }
     }, 1000); // 1-second delay to show the effect
 };
+
+// Hide the Share button if not supported
+if (!navigator.share) {
+    shareBtn.classList.add('hidden');
+}
 
 // Run the check on initial page load
 checkFirebaseConnection();

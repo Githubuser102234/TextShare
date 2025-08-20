@@ -26,6 +26,7 @@ const titleOutput = document.getElementById('title-output');
 const timestampOutput = document.getElementById('timestamp-output');
 const textOutput = document.getElementById('text-output');
 const shareBtn = document.getElementById('share-btn');
+const copyBtn = document.getElementById('copy-btn'); // New copy button
 const homeBtn = document.getElementById('home-btn');
 
 // Check the URL for an ID parameter
@@ -91,6 +92,9 @@ const showText = async (id) => {
     titleOutput.classList.add('shimmer');
     textOutput.classList.add('shimmer');
     timestampOutput.classList.add('shimmer');
+    shareBtn.classList.add('shimmer');
+    copyBtn.classList.add('shimmer');
+    homeBtn.classList.add('shimmer');
 
     // Add placeholder content to shimmer
     titleOutput.textContent = '';
@@ -104,14 +108,17 @@ const showText = async (id) => {
         const docRef = doc(db, "texts", id);
         const docSnap = await getDoc(docRef);
 
-        // Remove shimmer from all outputs
-        titleOutput.classList.remove('shimmer');
-        textOutput.classList.remove('shimmer');
-        timestampOutput.classList.remove('shimmer');
-
         if (docSnap.exists()) {
             const data = docSnap.data();
             const { title, content, createdAt } = data;
+
+            // Remove shimmer from all outputs
+            titleOutput.classList.remove('shimmer');
+            textOutput.classList.remove('shimmer');
+            timestampOutput.classList.remove('shimmer');
+            shareBtn.classList.remove('shimmer');
+            copyBtn.classList.remove('shimmer');
+            homeBtn.classList.remove('shimmer');
             
             // Check if title exists and display it
             if (title && title.trim() !== "") {
@@ -127,10 +134,12 @@ const showText = async (id) => {
             
             textOutput.textContent = content;
         } else {
+            // Invalid link case: show "not found" message and shimmer buttons
             titleOutput.classList.add('hidden');
             textOutput.textContent = "Oops! Text not found.";
         }
     } catch (error) {
+        // Error case: show error message and shimmer buttons
         titleOutput.classList.add('hidden');
         textOutput.textContent = "Error loading text. Please try again later.";
         console.error("Error getting document:", error);
@@ -195,6 +204,16 @@ shareBtn.addEventListener('click', () => {
     } else {
         alert("Web Share API is not supported in your browser.");
     }
+});
+
+// Event listener for the Copy button
+copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        alert("Link copied to clipboard!");
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+        alert("Failed to copy link.");
+    });
 });
 
 // Event listener for the Go Home button

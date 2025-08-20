@@ -38,16 +38,16 @@ const showText = async (id) => {
     formSection.classList.remove('active');
     displaySection.classList.add('active');
     
-    // Show a loading message and add the shimmer effect
-    textOutput.innerHTML = '<p class="loading-message">Loading text...</p>';
-    textOutput.classList.add('shimmer'); // Add this line 💡
+    // Clear the content and add the shimmer effect
+    textOutput.textContent = ''; // Change this line 💡
+    textOutput.classList.add('shimmer');
 
     try {
         const docRef = doc(db, "texts", id);
         const docSnap = await getDoc(docRef);
 
         // Remove the shimmer effect once content is loaded
-        textOutput.classList.remove('shimmer'); // And this line 💡
+        textOutput.classList.remove('shimmer');
 
         if (docSnap.exists()) {
             const textContent = docSnap.data().content;

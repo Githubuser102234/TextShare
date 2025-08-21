@@ -48,12 +48,12 @@ const deleteBtn = document.getElementById('delete-btn');
 const passwordPromptInput = document.getElementById('password-prompt-input');
 const passwordPromptBtn = document.getElementById('password-prompt-btn');
 
-// Get references to the report icon and the new report modal elements
+// NEW: Get a reference to the report icon and the new menu elements
 const reportIcon = document.getElementById('report-icon');
-const reportModal = document.getElementById('report-modal');
-const reportText = document.getElementById('report-text');
-const cancelReportBtn = document.getElementById('cancel-report-btn');
+const reportMenu = document.getElementById('report-menu');
+const reportReason = document.getElementById('report-reason');
 const submitReportBtn = document.getElementById('submit-report-btn');
+const cancelReportBtn = document.getElementById('cancel-report-btn');
 
 let currentNoteData = null; // To store note data for quick access
 
@@ -353,29 +353,38 @@ homeBtn.addEventListener('click', () => {
     window.location.href = `https://githubuser102234.github.io/TextShare/`;
 });
 
-// NEW: Event listeners for the report modal
+// NEW: Event listener for the Report Icon
 reportIcon.addEventListener('click', () => {
-    reportModal.style.display = 'flex';
+    reportMenu.classList.add('active');
 });
 
+// NEW: Event listener for the Cancel button on the report menu
 cancelReportBtn.addEventListener('click', () => {
-    reportModal.style.display = 'none';
-    reportText.value = '';
+    reportMenu.classList.remove('active');
+    reportReason.value = ''; // Clear the text field
 });
 
-submitReportBtn.addEventListener('click', () => {
-    const problem = reportText.value.trim();
-    if (problem) {
-        // Here you would typically send the report to a server or a database
-        // For this example, we'll just log it and alert the user
-        console.log(`Report submitted for note ID: ${textId}`);
-        console.log(`Problem: ${problem}`);
-        alert("Thank you for your report. We will review it shortly.");
-        
-        reportModal.style.display = 'none';
-        reportText.value = '';
-    } else {
-        alert("Please describe the problem before submitting.");
+// NEW: Event listener for the Submit button on the report menu
+submitReportBtn.addEventListener('click', async () => {
+    const reason = reportReason.value.trim();
+    if (reason === "") {
+        alert("Please provide a reason for the report.");
+        return;
+    }
+
+    // Add a new document to the 'reports' collection
+    try {
+        await addDoc(collection(db, "reports"), {
+            noteId: textId,
+            reason: reason,
+            reportedAt: new Date()
+        });
+        alert("Thank you for your report! We'll look into it.");
+        reportMenu.classList.remove('active');
+        reportReason.value = ''; // Clear the text field after submission
+    } catch (e) {
+        console.error("Error adding report document: ", e);
+        alert("An error occurred while submitting the report. Please try again.");
     }
 });
 

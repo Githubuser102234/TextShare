@@ -353,6 +353,7 @@ const checkFirebaseConnection = () => {
             submitBtn.classList.remove('shimmer');
             if (titleInput) titleInput.classList.remove('shimmer');
             if (textInput) textInput.classList.remove('shimmer');
+            if (passwordInput) passwordInput.classList.remove('shimmer'); // Fix applied here
         }
     }, 1000);
 };

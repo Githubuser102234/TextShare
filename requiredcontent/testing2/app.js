@@ -48,7 +48,17 @@ const deleteBtn = document.getElementById('delete-btn');
 const passwordPromptInput = document.getElementById('password-prompt-input');
 const passwordPromptBtn = document.getElementById('password-prompt-btn');
 
-// NEW: Get a reference to the report icon and the new menu elements
+// Get references to the new formatting buttons
+const boldBtnForm = document.getElementById('bold-btn-form');
+const italicBtnForm = document.getElementById('italic-btn-form');
+const headingBtnForm = document.getElementById('heading-btn-form');
+const listBtnForm = document.getElementById('list-btn-form');
+const boldBtnEdit = document.getElementById('bold-btn-edit');
+const italicBtnEdit = document.getElementById('italic-btn-edit');
+const headingBtnEdit = document.getElementById('heading-btn-edit');
+const listBtnEdit = document.getElementById('list-btn-edit');
+
+// Get a reference to the report icon and the new menu elements
 const reportIcon = document.getElementById('report-icon');
 const reportMenu = document.getElementById('report-menu');
 const reportReason = document.getElementById('report-reason');
@@ -187,6 +197,25 @@ const switchToEditMode = (data) => {
     titleEdit.value = data.title || '';
     passwordEdit.value = data.password || '';
     textEdit.value = data.content || '';
+};
+
+// New function to handle formatting
+const formatText = (textarea, prefix, suffix = '') => {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    const newText = prefix + selectedText + suffix;
+
+    textarea.value = textarea.value.substring(0, start) + newText + textarea.value.substring(end);
+    
+    // Position the cursor correctly
+    if (selectedText.length === 0) {
+        textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+    } else {
+        textarea.selectionStart = start;
+        textarea.selectionEnd = start + newText.length;
+    }
+    textarea.focus();
 };
 
 // Initial check
@@ -390,6 +419,17 @@ submitReportBtn.addEventListener('click', async () => {
         alert("An error occurred while submitting the report. Please try again.");
     }
 });
+
+// Add event listeners for the formatting buttons
+boldBtnForm.addEventListener('click', () => formatText(textInput, '**', '**'));
+italicBtnForm.addEventListener('click', () => formatText(textInput, '_', '_'));
+headingBtnForm.addEventListener('click', () => formatText(textInput, '## ', '\n'));
+listBtnForm.addEventListener('click', () => formatText(textInput, '- '));
+
+boldBtnEdit.addEventListener('click', () => formatText(textEdit, '**', '**'));
+italicBtnEdit.addEventListener('click', () => formatText(textEdit, '_', '_'));
+headingBtnEdit.addEventListener('click', () => formatText(textEdit, '## ', '\n'));
+listBtnEdit.addEventListener('click', () => formatText(textEdit, '- '));
 
 // A separate function to check for Firebase connection and remove shimmer
 const checkFirebaseConnection = () => {

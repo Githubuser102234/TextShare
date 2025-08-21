@@ -1,3 +1,10 @@
+Name: app.js
+Date: 8/20/25
+Recovery: The update when password protecting was added
+Notes: No notes
+Copy & Paste all content after the "-".
+------------------
+
 // Add your Firebase configuration here
 const firebaseConfig = {
     apiKey: "AIzaSyBO79GQNU79Iu1Cz001vX63FVp-d-0VFXI",

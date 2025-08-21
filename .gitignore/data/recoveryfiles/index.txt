@@ -1,0 +1,232 @@
+Name: index.html
+Date: 8/20/25
+Recovery: The update when password protecting was added
+Notes: No notes
+Copy & Paste all content after the "-".
+------------------
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextShare</title>
+    <style>
+        /* Existing CSS styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 10vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+        }
+        h1 {
+            color: #2196F3;
+            margin-bottom: 20px;
+        }
+        #form-section, #display-section, #token-section, #edit-section, #password-prompt {
+            display: none;
+        }
+        #form-section.active, #display-section.active, #token-section.active, #edit-section.active, #password-prompt.active {
+            display: block;
+        }
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 150px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: #2196F3;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #1976D2;
+        }
+        .text-display {
+            white-space: pre-wrap;
+            text-align: left;
+            padding: 20px;
+            background-color: #eef2f8;
+            border-radius: 8px;
+            border: 1px solid #d3d9e8;
+            overflow-x: auto;
+            max-height: 50vh;
+        }
+        #timestamp-output {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .loading-message {
+            font-style: italic;
+            color: #888;
+        }
+        .shimmer {
+            background: #f6f7f8;
+            background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+            background-repeat: no-repeat;
+            background-size: 800px 100%;
+            animation: shimmer 1s linear infinite;
+            cursor: progress;
+            pointer-events: none;
+        }
+        .shimmer::placeholder {
+            color: transparent;
+        }
+        @keyframes shimmer {
+            0% {
+                background-position: -468px 0;
+            }
+            100% {
+                background-position: 468px 0;
+            }
+        }
+        .hidden {
+            display: none;
+        }
+        .timestamp-placeholder {
+            display: inline-block;
+            width: 150px;
+            height: 1em;
+            vertical-align: middle;
+            background: #e0e0e0;
+            border-radius: 4px;
+        }
+        .token-display {
+            background-color: #fff3cd;
+            border: 1px solid #ffecb5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .token-display h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .token-display p {
+            word-break: break-all;
+            font-family: monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .key-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #2196F3;
+            transition: transform 0.2s ease;
+        }
+        .key-icon:hover {
+            transform: scale(1.1);
+        }
+        #delete-btn {
+            background-color: #f44336;
+        }
+        #delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        /* New CSS for the password prompt modal */
+        #password-prompt {
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            background-color: #f8f9fa;
+        }
+        #password-input {
+            margin-bottom: 10px;
+        }
+        #password-prompt button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TextShare</h1>
+
+        <button id="key-icon" class="key-icon hidden">🔑</button>
+        
+        <div id="form-section" class="active">
+            <input type="text" id="title-input" placeholder="Add a title (optional)">
+            <input type="password" id="password-input" placeholder="Set a password (optional)">
+            <textarea id="text-input" placeholder="Type or paste your text here..."></textarea>
+            <button id="submit-btn">Generate Link</button>
+        </div>
+
+        <div id="token-section">
+            <div class="token-display">
+                <h3>Your Permanent Access Token</h3>
+                <p>Please copy this token and save it somewhere safe. You will need it to edit or delete your note. It will not be shown again.</p>
+                <p id="access-token"></p>
+                <button id="token-continue-btn">I've Saved It, Continue</button>
+            </div>
+        </div>
+        
+        <div id="display-section">
+            <p id="timestamp-output"></p>
+            <h2 id="title-output" class="text-display"></h2>
+            <div id="text-output" class="text-display"></div>
+            <button id="share-btn">Share Link</button>
+            <button id="copy-btn">Copy Link</button>
+            <button id="home-btn">Go Home</button>
+        </div>
+
+        <div id="edit-section">
+            <input type="text" id="title-edit" placeholder="Edit title">
+            <input type="password" id="password-edit" placeholder="Change password (optional)">
+            <textarea id="text-edit" placeholder="Edit text here..."></textarea>
+            <button id="save-btn">Save Changes</button>
+            <button id="delete-btn">Delete Note</button>
+        </div>
+
+        <div id="password-prompt">
+            <h2>This note is password protected</h2>
+            <input type="password" id="password-prompt-input" placeholder="Enter password">
+            <button id="password-prompt-btn">View Note</button>
+        </div>
+
+        <script src="app.js" type="module"></script>
+    </div>
+</body>
+</html>

@@ -185,53 +185,49 @@
         .report-icon:hover {
             transform: scale(1.1);
         }
-        
-        /* NEW CSS for the report modal */
-        #report-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none; /* Hidden by default */
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
+        /* CSS for the new report pop-up menu */
+        #report-menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             background-color: #fff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            width: 90%;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 80%;
             max-width: 400px;
-            text-align: center;
-            animation: fadeIn 0.3s ease-out;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            text-align: left;
         }
-        .modal-content h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #555;
-        }
-        .modal-buttons {
+        #report-menu.active {
             display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
         }
-        .modal-buttons button {
-            width: 45%;
-            margin: 0;
+        #report-menu h3 {
+            margin-top: 0;
+            color: #333;
+            text-align: center;
         }
-        #cancel-report-btn {
-            background-color: #9e9e9e;
+        #report-menu textarea {
+            min-height: 80px;
         }
-        #cancel-report-btn:hover {
-            background-color: #757575;
+        #report-menu .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+        #report-menu .button-group button {
+            flex: 1;
+            margin-top: 0;
+        }
+        #report-menu .button-group #cancel-report-btn {
+            background-color: #6c757d;
+        }
+        #report-menu .button-group #cancel-report-btn:hover {
+            background-color: #5a6268;
         }
     </style>
 </head>
@@ -265,6 +261,16 @@
             <button id="share-btn">Share Link</button>
             <button id="copy-btn">Copy Link</button>
             <button id="home-btn">Go Home</button>
+
+            <div id="report-menu">
+                <h3>Report this Note</h3>
+                <p>What's the problem?</p>
+                <textarea id="report-reason" placeholder="e.g., Spam, inappropriate content, etc."></textarea>
+                <div class="button-group">
+                    <button id="cancel-report-btn">Cancel</button>
+                    <button id="submit-report-btn">Submit</button>
+                </div>
+            </div>
         </div>
 
         <div id="edit-section">
@@ -279,17 +285,6 @@
             <h2>This note is password protected</h2>
             <input type="password" id="password-prompt-input" placeholder="Enter password">
             <button id="password-prompt-btn">View Note</button>
-        </div>
-
-        <div id="report-modal">
-            <div class="modal-content">
-                <h3>What's the problem?</h3>
-                <textarea id="report-text" placeholder="Please describe the issue..."></textarea>
-                <div class="modal-buttons">
-                    <button id="cancel-report-btn">Cancel</button>
-                    <button id="submit-report-btn">Submit</button>
-                </div>
-            </div>
         </div>
 
         <script src="app.js" type="module"></script>

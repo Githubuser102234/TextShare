@@ -66,6 +66,7 @@ const submitReportBtn = document.getElementById('submit-report-btn');
 const cancelReportBtn = document.getElementById('cancel-report-btn');
 
 let currentNoteData = null; // To store note data for quick access
+let activeFormatter = null; // New variable to track the currently active formatter
 
 // Check the URL for an ID parameter
 const urlParams = new URLSearchParams(window.location.search);
@@ -204,18 +205,63 @@ const formatText = (textarea, prefix, suffix = '') => {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selectedText = textarea.value.substring(start, end);
-    const newText = prefix + selectedText + suffix;
 
-    textarea.value = textarea.value.substring(0, start) + newText + textarea.value.substring(end);
-    
-    // Position the cursor correctly
-    if (selectedText.length === 0) {
-        textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
-    } else {
+    if (selectedText.length > 0) {
+        // Wrap selected text
+        const newText = prefix + selectedText + suffix;
+        textarea.value = textarea.value.substring(0, start) + newText + textarea.value.substring(end);
         textarea.selectionStart = start;
         textarea.selectionEnd = start + newText.length;
+    } else {
+        // Insert prefix at cursor and move cursor
+        const newText = prefix + suffix;
+        textarea.value = textarea.value.substring(0, start) + newText + textarea.value.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
     }
     textarea.focus();
+};
+
+// Function to handle paste events
+const handlePaste = (event) => {
+    if (!activeFormatter) return;
+
+    event.preventDefault();
+    const pastedText = event.clipboardData.getData('text');
+    const textarea = event.target;
+    
+    // Apply formatting to pasted text
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const formattedText = activeFormatter.prefix + pastedText + activeFormatter.suffix;
+    
+    textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+    textarea.selectionStart = start + activeFormatter.prefix.length;
+    textarea.selectionEnd = start + formattedText.length;
+
+    // "Turn off" the active formatter
+    activeFormatter.button.classList.remove('active');
+    activeFormatter = null;
+};
+
+textInput.addEventListener('paste', handlePaste);
+textEdit.addEventListener('paste', handlePaste);
+
+// Function to toggle a formatter on and off
+const toggleFormatter = (button, textarea, prefix, suffix = '') => {
+    if (activeFormatter && activeFormatter.button === button) {
+        // Deactivate the current formatter
+        button.classList.remove('active');
+        activeFormatter = null;
+    } else {
+        // Deactivate previous formatter if any
+        if (activeFormatter) {
+            activeFormatter.button.classList.remove('active');
+        }
+        // Activate the new formatter
+        button.classList.add('active');
+        activeFormatter = { button, textarea, prefix, suffix };
+        formatText(textarea, prefix, suffix);
+    }
 };
 
 // Initial check
@@ -420,16 +466,16 @@ submitReportBtn.addEventListener('click', async () => {
     }
 });
 
-// Add event listeners for the formatting buttons
-boldBtnForm.addEventListener('click', () => formatText(textInput, '**', '**'));
-italicBtnForm.addEventListener('click', () => formatText(textInput, '_', '_'));
-headingBtnForm.addEventListener('click', () => formatText(textInput, '## ', '\n'));
-listBtnForm.addEventListener('click', () => formatText(textInput, '- '));
+// Update event listeners to use the new toggle function
+boldBtnForm.addEventListener('click', () => toggleFormatter(boldBtnForm, textInput, '**', '**'));
+italicBtnForm.addEventListener('click', () => toggleFormatter(italicBtnForm, textInput, '*', '*'));
+headingBtnForm.addEventListener('click', () => toggleFormatter(headingBtnForm, textInput, '## ', '\n'));
+listBtnForm.addEventListener('click', () => toggleFormatter(listBtnForm, textInput, '- '));
 
-boldBtnEdit.addEventListener('click', () => formatText(textEdit, '**', '**'));
-italicBtnEdit.addEventListener('click', () => formatText(textEdit, '_', '_'));
-headingBtnEdit.addEventListener('click', () => formatText(textEdit, '## ', '\n'));
-listBtnEdit.addEventListener('click', () => formatText(textEdit, '- '));
+boldBtnEdit.addEventListener('click', () => toggleFormatter(boldBtnEdit, textEdit, '**', '**'));
+italicBtnEdit.addEventListener('click', () => toggleFormatter(italicBtnEdit, textEdit, '*', '*'));
+headingBtnEdit.addEventListener('click', () => toggleFormatter(headingBtnEdit, textEdit, '## ', '\n'));
+listBtnEdit.addEventListener('click', () => toggleFormatter(listBtnEdit, textEdit, '- '));
 
 // A separate function to check for Firebase connection and remove shimmer
 const checkFirebaseConnection = () => {

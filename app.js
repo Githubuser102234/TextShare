@@ -48,8 +48,12 @@ const deleteBtn = document.getElementById('delete-btn');
 const passwordPromptInput = document.getElementById('password-prompt-input');
 const passwordPromptBtn = document.getElementById('password-prompt-btn');
 
-// NEW: Get a reference to the report icon
+// Get references to the report icon and the new report modal elements
 const reportIcon = document.getElementById('report-icon');
+const reportModal = document.getElementById('report-modal');
+const reportText = document.getElementById('report-text');
+const cancelReportBtn = document.getElementById('cancel-report-btn');
+const submitReportBtn = document.getElementById('submit-report-btn');
 
 let currentNoteData = null; // To store note data for quick access
 
@@ -349,9 +353,30 @@ homeBtn.addEventListener('click', () => {
     window.location.href = `https://githubuser102234.github.io/TextShare/`;
 });
 
-// NEW: Event listener for the Report Icon
+// NEW: Event listeners for the report modal
 reportIcon.addEventListener('click', () => {
-    alert('Sorry! This feature isn’t available yet!');
+    reportModal.style.display = 'flex';
+});
+
+cancelReportBtn.addEventListener('click', () => {
+    reportModal.style.display = 'none';
+    reportText.value = '';
+});
+
+submitReportBtn.addEventListener('click', () => {
+    const problem = reportText.value.trim();
+    if (problem) {
+        // Here you would typically send the report to a server or a database
+        // For this example, we'll just log it and alert the user
+        console.log(`Report submitted for note ID: ${textId}`);
+        console.log(`Problem: ${problem}`);
+        alert("Thank you for your report. We will review it shortly.");
+        
+        reportModal.style.display = 'none';
+        reportText.value = '';
+    } else {
+        alert("Please describe the problem before submitting.");
+    }
 });
 
 // A separate function to check for Firebase connection and remove shimmer

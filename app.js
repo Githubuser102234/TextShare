@@ -21,8 +21,10 @@ const formSection = document.getElementById('form-section');
 const displaySection = document.getElementById('display-section');
 const tokenSection = document.getElementById('token-section'); // New token section
 const editSection = document.getElementById('edit-section'); // New edit section
+const passwordSection = document.getElementById('password-section'); // New password section
 
 const titleInput = document.getElementById('title-input');
+const passwordInput = document.getElementById('password-input'); // New password input
 const textInput = document.getElementById('text-input');
 const submitBtn = document.getElementById('submit-btn');
 
@@ -38,9 +40,14 @@ const accessToken = document.getElementById('access-token');
 const tokenContinueBtn = document.getElementById('token-continue-btn');
 
 const titleEdit = document.getElementById('title-edit');
+const passwordEdit = document.getElementById('password-edit'); // New password edit input
 const textEdit = document.getElementById('text-edit');
 const saveBtn = document.getElementById('save-btn');
 const deleteBtn = document.getElementById('delete-btn');
+
+const passwordPrompt = document.getElementById('password-prompt');
+const passwordSubmitBtn = document.getElementById('password-submit-btn');
+const passwordHomeBtn = document.getElementById('password-home-btn');
 
 // Check the URL for an ID parameter and a token parameter (for returning users)
 const urlParams = new URLSearchParams(window.location.search);
@@ -52,9 +59,11 @@ const showForm = () => {
     displaySection.classList.remove('active');
     editSection.classList.remove('active');
     tokenSection.classList.remove('active');
+    passwordSection.classList.remove('active');
     submitBtn.classList.add('shimmer');
     if (titleInput) titleInput.classList.add('shimmer');
     if (textInput) textInput.classList.add('shimmer');
+    if (passwordInput) passwordInput.classList.add('shimmer');
 };
 
 // Function to calculate time ago
@@ -87,13 +96,9 @@ const formatDate = (date) => {
     return `${mm}/${dd}/${yy} ${time}`;
 };
 
-// Function to handle showing the text display
-const showText = async (id) => {
-    formSection.classList.remove('active');
-    tokenSection.classList.remove('active');
-    editSection.classList.remove('active');
+const showNoteContent = (data) => {
     displaySection.classList.add('active');
-    keyIcon.classList.remove('hidden');
+    passwordSection.classList.remove('active');
 
     // Set all outputs and buttons to shimmer initially
     titleOutput.classList.add('shimmer');
@@ -109,37 +114,87 @@ const showText = async (id) => {
     timestampOutput.innerHTML = `<span class="timestamp-placeholder shimmer"></span>`;
     titleOutput.classList.add('hidden');
 
+    const { title, content, createdAt } = data;
+
+    // Remove shimmer from all outputs
+    titleOutput.classList.remove('shimmer');
+    textOutput.classList.remove('shimmer');
+    timestampOutput.classList.remove('shimmer');
+    shareBtn.classList.remove('shimmer');
+    copyBtn.classList.remove('shimmer');
+    homeBtn.classList.remove('shimmer');
+    keyIcon.classList.remove('shimmer');
+    
+    if (title && title.trim() !== "") {
+        titleOutput.textContent = title;
+        titleOutput.classList.remove('hidden');
+    } else {
+        titleOutput.classList.add('hidden');
+    }
+    const date = createdAt.toDate();
+    timestampOutput.textContent = `${formatDate(date)} • ${timeAgo(date)}`;
+    textOutput.textContent = content;
+};
+
+const handlePasswordSubmit = (id, enteredPassword) => {
+    passwordSubmitBtn.classList.add('shimmer');
+    
+    getDoc(doc(db, "texts", id)).then(docSnap => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.password === enteredPassword) {
+                showNoteContent(data);
+            } else {
+                alert("Incorrect password.");
+                passwordSubmitBtn.classList.remove('shimmer');
+                passwordPrompt.value = '';
+            }
+        }
+    }).catch(error => {
+        console.error("Error validating password:", error);
+        alert("An error occurred. Please try again.");
+        passwordSubmitBtn.classList.remove('shimmer');
+    });
+};
+
+// Function to handle showing the text display
+const showText = async (id) => {
+    formSection.classList.remove('active');
+    tokenSection.classList.remove('active');
+    editSection.classList.remove('active');
+    passwordSection.classList.remove('active');
+    displaySection.classList.remove('active');
+    keyIcon.classList.remove('hidden');
+
     try {
         const docRef = doc(db, "texts", id);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
             const data = docSnap.data();
-            const { title, content, createdAt } = data;
+            const { password } = data;
 
-            // Remove shimmer from all outputs
-            titleOutput.classList.remove('shimmer');
-            textOutput.classList.remove('shimmer');
-            timestampOutput.classList.remove('shimmer');
-            shareBtn.classList.remove('shimmer');
-            copyBtn.classList.remove('shimmer');
-            homeBtn.classList.remove('shimmer');
-            keyIcon.classList.remove('shimmer');
-            
-            if (title && title.trim() !== "") {
-                titleOutput.textContent = title;
-                titleOutput.classList.remove('hidden');
+            if (password) {
+                // Show password prompt section
+                passwordSection.classList.add('active');
+                passwordPrompt.focus();
+                passwordSubmitBtn.addEventListener('click', () => {
+                    handlePasswordSubmit(id, passwordPrompt.value);
+                }, { once: true });
+                passwordHomeBtn.addEventListener('click', () => {
+                    window.location.href = `https://githubuser102234.github.io/TextShare/`;
+                }, { once: true });
             } else {
-                titleOutput.classList.add('hidden');
+                // No password, show the text directly
+                showNoteContent(data);
             }
-            const date = createdAt.toDate();
-            timestampOutput.textContent = `${formatDate(date)} • ${timeAgo(date)}`;
-            textOutput.textContent = content;
         } else {
+            displaySection.classList.add('active');
             titleOutput.classList.add('hidden');
             textOutput.textContent = "Oops! Text not found.";
         }
     } catch (error) {
+        displaySection.classList.add('active');
         titleOutput.classList.add('hidden');
         textOutput.textContent = "Error loading text. Please try again later.";
         console.error("Error getting document:", error);
@@ -153,6 +208,7 @@ const switchToEditMode = (data) => {
 
     titleEdit.value = data.title || '';
     textEdit.value = data.content || '';
+    passwordEdit.value = data.password || ''; // Set the current password in the edit field
 };
 
 // If a textId exists in the URL, fetch and display the text
@@ -176,6 +232,7 @@ const generateToken = () => {
 submitBtn.addEventListener('click', async () => {
     const title = titleInput.value.trim();
     const text = textInput.value.trim();
+    const password = passwordInput.value.trim();
     const token = generateToken();
 
     if (text === "") {
@@ -191,6 +248,7 @@ submitBtn.addEventListener('click', async () => {
         const docRef = await addDoc(collection(db, "texts"), {
             title: title,
             content: text,
+            password: password,
             token: token,
             createdAt: new Date()
         });
@@ -239,6 +297,7 @@ keyIcon.addEventListener('click', async () => {
 saveBtn.addEventListener('click', async () => {
     const newTitle = titleEdit.value.trim();
     const newText = textEdit.value.trim();
+    const newPassword = passwordEdit.value.trim();
 
     if (newText === "") {
         alert("Please enter some text!");
@@ -249,7 +308,8 @@ saveBtn.addEventListener('click', async () => {
         const docRef = doc(db, "texts", textId);
         await updateDoc(docRef, {
             title: newTitle,
-            content: newText
+            content: newText,
+            password: newPassword
         });
         alert("Note saved successfully!");
         window.location.reload();
@@ -312,6 +372,7 @@ const checkFirebaseConnection = () => {
         if (formSection.classList.contains('active')) {
             submitBtn.classList.remove('shimmer');
             if (titleInput) titleInput.classList.remove('shimmer');
+            if (passwordInput) passwordInput.classList.remove('shimmer');
             if (textInput) textInput.classList.remove('shimmer');
         }
     }, 1000);

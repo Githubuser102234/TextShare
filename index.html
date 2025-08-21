@@ -172,6 +172,19 @@
         #password-prompt button {
             margin-top: 10px;
         }
+        /* NEW CSS for the report icon */
+        .report-icon {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .report-icon:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
@@ -197,6 +210,7 @@
         </div>
         
         <div id="display-section">
+            <img src="https://githubuser102234.github.io/TextShare/requiredcontent/media/IMG_0761.png" alt="Report icon" id="report-icon" class="report-icon">
             <p id="timestamp-output"></p>
             <h2 id="title-output" class="text-display"></h2>
             <div id="text-output" class="text-display"></div>

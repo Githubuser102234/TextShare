@@ -1,10 +1,3 @@
-Name: app.js
-Date: 8/20/25
-Recovery: The update when password protecting was added
-Notes: No notes
-Copy & Paste all content after the "-".
-------------------
-
 // Add your Firebase configuration here
 const firebaseConfig = {
     apiKey: "AIzaSyBO79GQNU79Iu1Cz001vX63FVp-d-0VFXI",
@@ -54,6 +47,9 @@ const deleteBtn = document.getElementById('delete-btn');
 
 const passwordPromptInput = document.getElementById('password-prompt-input');
 const passwordPromptBtn = document.getElementById('password-prompt-btn');
+
+// NEW: Get a reference to the report icon
+const reportIcon = document.getElementById('report-icon');
 
 let currentNoteData = null; // To store note data for quick access
 
@@ -351,6 +347,11 @@ copyBtn.addEventListener('click', () => {
 // Event listener for the Go Home button
 homeBtn.addEventListener('click', () => {
     window.location.href = `https://githubuser102234.github.io/TextShare/`;
+});
+
+// NEW: Event listener for the Report Icon
+reportIcon.addEventListener('click', () => {
+    alert('Sorry! This feature isn’t available yet!');
 });
 
 // A separate function to check for Firebase connection and remove shimmer

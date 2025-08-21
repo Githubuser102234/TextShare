@@ -48,7 +48,8 @@ const deleteBtn = document.getElementById('delete-btn');
 const passwordPromptInput = document.getElementById('password-prompt-input');
 const passwordPromptBtn = document.getElementById('password-prompt-btn');
 
-const reportIcon = document.getElementById('report-icon'); // New line for report icon
+// NEW: Get a reference to the report icon
+const reportIcon = document.getElementById('report-icon');
 
 let currentNoteData = null; // To store note data for quick access
 
@@ -348,9 +349,9 @@ homeBtn.addEventListener('click', () => {
     window.location.href = `https://githubuser102234.github.io/TextShare/`;
 });
 
-// New Event listener for the report icon
+// NEW: Event listener for the Report Icon
 reportIcon.addEventListener('click', () => {
-    alert("Sorry! This feature isn’t available yet!");
+    alert('Sorry! This feature isn’t available yet!');
 });
 
 // A separate function to check for Firebase connection and remove shimmer

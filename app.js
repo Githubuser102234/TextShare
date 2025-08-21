@@ -48,6 +48,9 @@ const deleteBtn = document.getElementById('delete-btn');
 const passwordPromptInput = document.getElementById('password-prompt-input');
 const passwordPromptBtn = document.getElementById('password-prompt-btn');
 
+// NEW: Get a reference to the report icon
+const reportIcon = document.getElementById('report-icon');
+
 let currentNoteData = null; // To store note data for quick access
 
 // Check the URL for an ID parameter
@@ -344,6 +347,11 @@ copyBtn.addEventListener('click', () => {
 // Event listener for the Go Home button
 homeBtn.addEventListener('click', () => {
     window.location.href = `https://githubuser102234.github.io/TextShare/`;
+});
+
+// NEW: Event listener for the Report Icon
+reportIcon.addEventListener('click', () => {
+    alert('Sorry! This feature isn’t available yet!');
 });
 
 // A separate function to check for Firebase connection and remove shimmer

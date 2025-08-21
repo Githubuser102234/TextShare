@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextShare Report Viewer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+        h1 {
+            color: #f44336;
+            margin-bottom: 20px;
+        }
+        .report-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+        .report-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+        .report-item:hover {
+            transform: translateY(-5px);
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .report-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 1.2em;
+        }
+        .report-header span {
+            font-size: 0.8em;
+            color: #888;
+        }
+        .report-reason p {
+            font-style: italic;
+            color: #555;
+            margin-top: 0;
+        }
+        .content-preview {
+            background-color: #eef2f8;
+            border-left: 4px solid #2196F3;
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 4px;
+        }
+        .content-preview h3, .content-preview p {
+            margin: 0;
+        }
+        .content-preview h3 {
+            font-size: 1em;
+            color: #1976D2;
+        }
+        .content-preview p {
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: 0.9em;
+            max-height: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        .report-actions button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+        .report-actions .view-btn {
+            background-color: #2196F3;
+            color: #fff;
+        }
+        .report-actions .view-btn:hover {
+            background-color: #1976D2;
+        }
+        .report-actions .remove-btn {
+            background-color: #f44336;
+            color: #fff;
+        }
+        .report-actions .remove-btn:hover {
+            background-color: #d32f2f;
+        }
+        .loading-message {
+            font-style: italic;
+            color: #888;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+        #auth-section {
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            background-color: #f8f9fa;
+        }
+        #auth-section input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        #auth-section button {
+            background-color: #2196F3;
+            color: #fff;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+        #auth-section .logout-btn {
+            background-color: #6c757d;
+        }
+        #auth-section .logout-btn:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="auth-section">
+            <h1 id="auth-header">Admin Login</h1>
+            <p id="auth-status"></p>
+            <div id="auth-form" class="hidden">
+                <input type="email" id="email-input" placeholder="Email">
+                <input type="password" id="password-input" placeholder="Password">
+                <button id="login-btn">Log In</button>
+                <button id="signup-btn">Sign Up</button>
+            </div>
+            <button id="logout-btn" class="hidden">Log Out</button>
+        </div>
+        <div id="report-viewer" class="hidden">
+            <h1>Reported Content</h1>
+            <div id="report-list-container">
+                <p id="loading-message" class="loading-message">Loading reports...</p>
+                <ul class="report-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase configuration and imports
+        const firebaseConfig = {
+            apiKey: "AIzaSyBO79GQNU79Iu1Cz001vX63FVp-d-0VFXI",
+            authDomain: "textshare-1a502.firebaseapp.com",
+            projectId: "textshare-1a502",
+            storageBucket: "textshare-1a502.firebasestorage.app",
+            messagingSenderId: "919298162474",
+            appId: "1:919298162474:web:ef0ee80bcc290c3753e853",
+            measurementId: "G-130PGMYVBC"
+        };
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // **IMPORTANT**: Replace with your actual admin user IDs.
+        const ADMIN_USERS = [
+            "placeholder_admin_user_id_1",
+            "placeholder_admin_user_id_2",
+            // Add more admin UIDs here
+        ];
+
+        // DOM elements
+        const authSection = document.getElementById('auth-section');
+        const authHeader = document.getElementById('auth-header');
+        const authStatus = document.getElementById('auth-status');
+        const authForm = document.getElementById('auth-form');
+        const emailInput = document.getElementById('email-input');
+        const passwordInput = document.getElementById('password-input');
+        const loginBtn = document.getElementById('login-btn');
+        const signupBtn = document.getElementById('signup-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const reportViewer = document.getElementById('report-viewer');
+        const reportList = document.querySelector('.report-list');
+        const loadingMessage = document.getElementById('loading-message');
+
+        const loadReports = async () => {
+            reportList.innerHTML = '';
+            loadingMessage.classList.remove('hidden');
+            loadingMessage.textContent = "Loading reports..."; // Reset message
+            
+            // Check if the current user is an admin
+            if (!ADMIN_USERS.includes(auth.currentUser.uid)) {
+                loadingMessage.textContent = "You are not authorized to view this page.";
+                return;
+            }
+
+            try {
+                const reportsRef = collection(db, "reports");
+                const reportsSnapshot = await getDocs(reportsRef);
+                
+                if (reportsSnapshot.empty) {
+                    loadingMessage.textContent = "No reports found.";
+                    return;
+                }
+
+                for (const docSnapshot of reportsSnapshot.docs) {
+                    const reportData = docSnapshot.data();
+                    const noteId = reportData.noteId;
+                    const reportReason = reportData.reason;
+                    const reportedAt = reportData.reportedAt.toDate().toLocaleString();
+
+                    const noteRef = doc(db, "texts", noteId);
+                    const noteSnap = await getDoc(noteRef);
+                    let noteTitle = "Note not found";
+                    let noteContent = "Content not available.";
+
+                    if (noteSnap.exists()) {
+                        const noteData = noteSnap.data();
+                        noteTitle = noteData.title || "No Title";
+                        noteContent = noteData.content || "No Content";
+                    }
+
+                    const reportItem = document.createElement('li');
+                    reportItem.classList.add('report-item');
+                    reportItem.innerHTML = `
+                        <div class="report-header">
+                            <h2>Note ID: ${noteId}</h2>
+                            <span>Reported: ${reportedAt}</span>
+                        </div>
+                        <div class="report-reason">
+                            <p><strong>Reason:</strong> ${reportReason}</p>
+                        </div>
+                        <div class="content-preview">
+                            <h3>Quick View</h3>
+                            <h4>Title: ${noteTitle}</h4>
+                            <p>${noteContent}</p>
+                        </div>
+                        <div class="report-actions">
+                            <button class="view-btn" data-id="${noteId}">Go to reported content</button>
+                            <button class="remove-btn" data-report-id="${docSnapshot.id}" data-note-id="${noteId}">Remove reported content</button>
+                        </div>
+                    `;
+                    reportList.appendChild(reportItem);
+                }
+                loadingMessage.classList.add('hidden');
+            } catch (error) {
+                console.error("Error fetching reports: ", error);
+                loadingMessage.textContent = "Error loading reports.";
+            }
+        };
+
+        const handleActions = async (e) => {
+            if (e.target.classList.contains('view-btn')) {
+                const noteId = e.target.dataset.id;
+                window.open(`https://githubuser102234.github.io/TextShare/?id=${noteId}`, '_blank');
+            } else if (e.target.classList.contains('remove-btn')) {
+                if (!confirm("Are you sure you want to remove this reported content? This will delete the note and the report.")) return;
+                
+                const reportId = e.target.dataset.reportId;
+                const noteId = e.target.dataset.noteId;
+                
+                try {
+                    await deleteDoc(doc(db, "texts", noteId));
+                    await deleteDoc(doc(db, "reports", reportId));
+                    alert("Content and report removed successfully!");
+                    loadReports();
+                } catch (error) {
+                    console.error("Error removing content:", error);
+                    alert("An error occurred while removing the content.");
+                }
+            }
+        };
+
+        loginBtn.addEventListener('click', async () => {
+            try {
+                await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+            } catch (error) {
+                console.error("Login failed:", error);
+                alert("Login failed: " + error.message);
+            }
+        });
+
+        signupBtn.addEventListener('click', async () => {
+            try {
+                await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+                alert("Sign up successful! You are now logged in.");
+            } catch (error) {
+                console.error("Sign up failed:", error);
+                alert("Sign up failed: " + error.message);
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                authHeader.textContent = "Welcome!";
+                authStatus.textContent = `You are logged in as ${user.email}.`;
+                authForm.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                reportViewer.classList.remove('hidden');
+                loadReports();
+            } else {
+                authHeader.textContent = "Admin Login";
+                authStatus.textContent = "Please sign in or sign up to view reports.";
+                authForm.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                reportViewer.classList.add('hidden');
+                emailInput.value = '';
+                passwordInput.value = '';
+            }
+        });
+
+        reportList.addEventListener('click', handleActions);
+    </script>
+</body>
+</html>
